@@ -1,6 +1,6 @@
 ﻿using ArggonStores.Application.Common.Interfaces;
 
-namespace ArggonStores.Application.StockManager.Products.Commands.Delete;
+namespace ArggonStores.Application.ProductModule.Products.Commands.Delete;
 
 public record DeleteProductCommand : IRequest<bool>
 {

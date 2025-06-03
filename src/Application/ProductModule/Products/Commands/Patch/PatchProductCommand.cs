@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using ArggonStores.Application.Common.Interfaces;
 
-namespace ArggonStores.Application.StockManager.Products.Commands.Patch;
+namespace ArggonStores.Application.ProductModule.Products.Commands.Patch;
 
 public record PatchProductCommand : IRequest<bool>
 {

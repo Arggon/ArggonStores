@@ -1,4 +1,4 @@
-﻿namespace ArggonStores.Domain.Entities.StockManager;
+﻿namespace ArggonStores.Domain.Entities.ProductModule;
 
 public class Product : BaseAuditableEntity
 {

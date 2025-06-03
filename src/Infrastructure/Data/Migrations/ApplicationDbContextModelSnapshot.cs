@@ -22,7 +22,7 @@ namespace ArggonStores.Infrastructure.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("ArggonStores.Domain.Entities.StockManager.Product", b =>
+            modelBuilder.Entity("ArggonStores.Domain.Entities.ProductModule.Product", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()

@@ -991,6 +991,131 @@
           }
         }
       }
+    },
+    "/api/Products/GetProductsByFilters": {
+      "get": {
+        "tags": [
+          "Products"
+        ],
+        "operationId": "GetProductsByFilters",
+        "parameters": [
+          {
+            "name": "InternalCode",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 1
+          },
+          {
+            "name": "Code",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 2
+          },
+          {
+            "name": "Name",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 3
+          },
+          {
+            "name": "Description",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 4
+          },
+          {
+            "name": "ImageUrl",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 5
+          },
+          {
+            "name": "Brand",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 6
+          },
+          {
+            "name": "Category",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "nullable": true
+            },
+            "x-position": 7
+          },
+          {
+            "name": "Stock",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "nullable": true
+            },
+            "x-position": 8
+          },
+          {
+            "name": "PurchasePrice",
+            "in": "query",
+            "schema": {
+              "type": "number",
+              "format": "decimal",
+              "nullable": true
+            },
+            "x-position": 9
+          },
+          {
+            "name": "PageNumber",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 10
+          },
+          {
+            "name": "PageSize",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            },
+            "x-position": 11
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedListOfProductDto"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

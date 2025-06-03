@@ -1,9 +1,9 @@
 ﻿using ArggonStores.Application.Common.Interfaces;
 using ArggonStores.Application.Common.Mappings;
 using ArggonStores.Application.Common.Models;
-using ArggonStores.Application.StockManager.Products.Queries.Get;
+using ArggonStores.Application.ProductModule.Products.Queries.GetById;
 
-namespace ArggonStores.Application.StockManager.Products.Queries.GetPaginatedList;
+namespace ArggonStores.Application.ProductModule.Products.Queries.GetPaginatedList;
 
 public record GetProductsPaginatedListQuery : IRequest<PaginatedList<ProductDto>>
 {

@@ -1,8 +1,8 @@
-﻿using ArggonStores.Domain.Entities.StockManager;
+﻿using ArggonStores.Domain.Entities.ProductModule;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace ArggonStores.Infrastructure.Data.Configurations.StockManager;
+namespace ArggonStores.Infrastructure.Data.Configurations.ProductModule;
 
 public class ProductConfiguration : IEntityTypeConfiguration<Product>
 {

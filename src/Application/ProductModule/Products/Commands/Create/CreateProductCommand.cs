@@ -1,7 +1,7 @@
 ﻿using ArggonStores.Application.Common.Interfaces;
-using ArggonStores.Domain.Entities.StockManager;
+using ArggonStores.Domain.Entities.ProductModule;
 
-namespace ArggonStores.Application.StockManager.Products.Commands.Create;
+namespace ArggonStores.Application.ProductModule.Products.Commands.Create;
 
 public record CreateProductCommand : IRequest<int>
 {

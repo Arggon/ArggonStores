@@ -1,13 +1,14 @@
 ﻿using ArggonStores.Application.Common.Models;
-using ArggonStores.Application.StockManager.Products.Commands.Create;
-using ArggonStores.Application.StockManager.Products.Commands.Delete;
-using ArggonStores.Application.StockManager.Products.Commands.Patch;
-using ArggonStores.Application.StockManager.Products.Commands.Update;
-using ArggonStores.Application.StockManager.Products.Queries.Get;
-using ArggonStores.Application.StockManager.Products.Queries.GetPaginatedList;
+using ArggonStores.Application.ProductModule.Products.Commands.Create;
+using ArggonStores.Application.ProductModule.Products.Commands.Delete;
+using ArggonStores.Application.ProductModule.Products.Commands.Patch;
+using ArggonStores.Application.ProductModule.Products.Commands.Update;
+using ArggonStores.Application.ProductModule.Products.Queries.GetById;
+using ArggonStores.Application.ProductModule.Products.Queries.GetPaginatedList;
+using ArggonStores.Application.ProductModule.Products.Queries.GetProductByFilter;
 using Microsoft.AspNetCore.Http.HttpResults;
 
-namespace ArggonStores.Web.Endpoints.StockManager;
+namespace ArggonStores.Web.Endpoints.ProductModule;
 
 public class Products : EndpointGroupBase
 {
@@ -17,6 +18,7 @@ public class Products : EndpointGroupBase
             .MapPost(CreateProduct)
             .MapGet(GetProducts)
             .MapGet(GetProduct, "{id}")
+            .MapGet(GetProductsByFilters, "GetProductsByFilters")
             .MapPut(UpdateProduct, "{id}")
             .MapPatch(PatchProduct, "{id}")
             .MapDelete(DeleteProduct, "{id}")
@@ -29,6 +31,13 @@ public class Products : EndpointGroupBase
 
         return TypedResults.Created($"/{nameof(ProductDto)}/{id}", id);
     }
+    private async Task<Ok<ProductDto>> GetProduct(ISender sender, int id)
+    {
+        var query = new GetProductByIdQuery { Id = id };
+        var item = await sender.Send(query);
+
+        return TypedResults.Ok(item);
+    }
 
     private async Task<Ok<PaginatedList<ProductDto>>> GetProducts(ISender sender, [AsParameters] GetProductsPaginatedListQuery query)
     {
@@ -37,12 +46,11 @@ public class Products : EndpointGroupBase
         return TypedResults.Ok(result);
     }
 
-    private async Task<Ok<ProductDto>> GetProduct(ISender sender, int id)
+    private async Task<Ok<PaginatedList<ProductDto>>> GetProductsByFilters(ISender sender, [AsParameters] GetProductByFiltersQuery query)
     {
-        var query = new GetProductQuery { Id = id };
-        var item = await sender.Send(query);
+        var result = await sender.Send(query);
 
-        return TypedResults.Ok(item);
+        return TypedResults.Ok(result);
     }
 
     private async Task<bool> UpdateProduct(ISender sender, int id, UpdateProductCommand command)

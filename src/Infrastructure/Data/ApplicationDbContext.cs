@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using ArggonStores.Application.Common.Interfaces;
 using ArggonStores.Domain.Entities;
-using ArggonStores.Domain.Entities.StockManager;
+using ArggonStores.Domain.Entities.ProductModule;
 using ArggonStores.Infrastructure.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;

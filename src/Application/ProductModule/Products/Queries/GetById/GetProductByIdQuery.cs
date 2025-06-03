@@ -1,16 +1,16 @@
 ﻿using ArggonStores.Application.Common.Interfaces;
-using ArggonStores.Domain.Entities.StockManager;
+using ArggonStores.Domain.Entities.ProductModule;
 
-namespace ArggonStores.Application.StockManager.Products.Queries.Get;
+namespace ArggonStores.Application.ProductModule.Products.Queries.GetById;
 
-public record GetProductQuery : IRequest<ProductDto>
+public record GetProductByIdQuery : IRequest<ProductDto>
 {
     public int Id { get; set; }
 }
 
-public class GetProductQueryHandler(IApplicationDbContext context, IMapper mapper) : IRequestHandler<GetProductQuery, ProductDto>
+public class GetProductQueryHandler(IApplicationDbContext context, IMapper mapper) : IRequestHandler<GetProductByIdQuery, ProductDto>
 {
-    public async Task<ProductDto> Handle(GetProductQuery request, CancellationToken cancellationToken)
+    public async Task<ProductDto> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
     {
         var item = await context.Product
             .AsNoTracking()

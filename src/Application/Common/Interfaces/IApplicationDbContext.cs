@@ -1,5 +1,5 @@
 ﻿using ArggonStores.Domain.Entities;
-using ArggonStores.Domain.Entities.StockManager;
+using ArggonStores.Domain.Entities.ProductModule;
 
 namespace ArggonStores.Application.Common.Interfaces;
 
