@@ -1,0 +1,186 @@
+@page "/dashboard"
+@using ArggonStores.Web.Models
+@using ArggonStores.Web.Services
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Dashboard - ArggonStores Admin</PageTitle>
+
+<link href="~/css/dashboard.css" rel="stylesheet" />
+
+<div class="dashboard-container">
+    <header class="dashboard-header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="logo">
+                    <div class="logo-icon">AS</div>
+                    <span class="logo-text">ArggonStores Admin</span>
+                </div>
+            </div>
+            <div class="header-right">
+                @if (currentUser != null)
+                {
+                    <div class="user-info">
+                        <div class="user-avatar">
+                            @(currentUser.FirstName?[0])@(currentUser.LastName?[0])
+                        </div>
+                        <div class="user-details">
+                            <span class="user-name">@currentUser.FirstName @currentUser.LastName</span>
+                            <span class="user-email">@currentUser.Email</span>
+                        </div>
+                    </div>
+                }
+                <button class="btn btn-outline" @onclick="HandleLogout">
+                    <span class="logout-icon">🚪</span>
+                    Sign Out
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-main">
+        <div class="dashboard-content">
+            <div class="welcome-section">
+                <h1 class="welcome-title">
+                    Welcome back, @(currentUser?.FirstName ?? "Admin")! 👋
+                </h1>
+                <p class="welcome-subtitle">
+                    Here's what's happening with your store today.
+                </p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">24</h3>
+                        <p class="stat-label">Total Orders</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">💰</div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">$12,840</h3>
+                        <p class="stat-label">Revenue</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">156</h3>
+                        <p class="stat-label">Customers</p>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon">📦</div>
+                    <div class="stat-content">
+                        <h3 class="stat-number">89</h3>
+                        <p class="stat-label">Products</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Recent Orders</h2>
+                        <span class="badge">5 new</span>
+                    </div>
+                    <div class="card-content">
+                        <div class="order-list">
+                            <div class="order-item">
+                                <div class="order-info">
+                                    <span class="order-id">#12345</span>
+                                    <span class="order-customer">John Smith</span>
+                                </div>
+                                <span class="order-amount">$299.99</span>
+                            </div>
+                            <div class="order-item">
+                                <div class="order-info">
+                                    <span class="order-id">#12344</span>
+                                    <span class="order-customer">Sarah Johnson</span>
+                                </div>
+                                <span class="order-amount">$149.50</span>
+                            </div>
+                            <div class="order-item">
+                                <div class="order-info">
+                                    <span class="order-id">#12343</span>
+                                    <span class="order-customer">Mike Davis</span>
+                                </div>
+                                <span class="order-amount">$89.99</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Quick Actions</h2>
+                    </div>
+                    <div class="card-content">
+                        <div class="action-grid">
+                            <button class="action-btn">
+                                <div class="action-icon">➕</div>
+                                <span>Add Product</span>
+                            </button>
+                            <button class="action-btn">
+                                <div class="action-icon">📋</div>
+                                <span>View Orders</span>
+                            </button>
+                            <button class="action-btn">
+                                <div class="action-icon">👥</div>
+                                <span>Manage Users</span>
+                            </button>
+                            <button class="action-btn">
+                                <div class="action-icon">⚙️</div>
+                                <span>Settings</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+@code {
+    private UserInfo? currentUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var isAuthenticated = await AuthService.IsAuthenticatedAsync();
+            if (!isAuthenticated)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            currentUser = await AuthService.GetCurrentUserAsync();
+            if (currentUser == null)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+        }
+        catch (Exception)
+        {
+            Navigation.NavigateTo("/login");
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleLogout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/login");
+    }
+}
