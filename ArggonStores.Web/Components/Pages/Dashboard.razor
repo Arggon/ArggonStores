@@ -123,17 +123,17 @@
                     </div>
                     <div class="card-content">
                         <div class="action-grid">
-                            <button class="action-btn">
+                            <button class="action-btn" @onclick="@(() => Navigation.NavigateTo("/products/add"))">
                                 <div class="action-icon">➕</div>
                                 <span>Add Product</span>
+                            </button>
+                            <button class="action-btn" @onclick="@(() => Navigation.NavigateTo("/products"))">
+                                <div class="action-icon">📦</div>
+                                <span>Manage Products</span>
                             </button>
                             <button class="action-btn">
                                 <div class="action-icon">📋</div>
                                 <span>View Orders</span>
-                            </button>
-                            <button class="action-btn">
-                                <div class="action-icon">👥</div>
-                                <span>Manage Users</span>
                             </button>
                             <button class="action-btn">
                                 <div class="action-icon">⚙️</div>

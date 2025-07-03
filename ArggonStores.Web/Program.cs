@@ -15,6 +15,12 @@ builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
     client.BaseAddress = new Uri(apiBaseUrl);
 });
 
+builder.Services.AddHttpClient<IProductService, ProductService>(client =>
+{
+    var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5007/";
+    client.BaseAddress = new Uri(apiBaseUrl);
+});
+
 // Add Blazored Local Storage
 builder.Services.AddBlazoredLocalStorage();
 
