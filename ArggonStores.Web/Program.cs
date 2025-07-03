@@ -11,14 +11,12 @@ builder.Services.AddRazorComponents()
 // Add HTTP client
 builder.Services.AddHttpClient<IAuthService, AuthService>(client =>
 {
-    client.BaseAddress = new Uri(builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7000/");
+    var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5007/";
+    client.BaseAddress = new Uri(apiBaseUrl);
 });
 
 // Add Blazored Local Storage
 builder.Services.AddBlazoredLocalStorage();
-
-// Add Auth Service
-builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 

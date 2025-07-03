@@ -221,12 +221,19 @@ public class AuthService : IAuthService
 
     public async Task<bool> IsAuthenticatedAsync()
     {
-        var token = await _localStorage.GetItemAsync<string>("authToken");
-        if (string.IsNullOrEmpty(token))
-            return false;
+        try
+        {
+            var token = await _localStorage.GetItemAsync<string>("authToken");
+            if (string.IsNullOrEmpty(token))
+                return false;
 
-        SetAuthorizationHeader(token);
-        return true;
+            SetAuthorizationHeader(token);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private void SetAuthorizationHeader(string token)

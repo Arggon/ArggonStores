@@ -150,31 +150,34 @@
 @code {
     private UserInfo? currentUser;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        try
+        if (firstRender)
         {
-            var isAuthenticated = await AuthService.IsAuthenticatedAsync();
-            if (!isAuthenticated)
+            try
             {
-                Navigation.NavigateTo("/login");
-                return;
-            }
+                var isAuthenticated = await AuthService.IsAuthenticatedAsync();
+                if (!isAuthenticated)
+                {
+                    Navigation.NavigateTo("/login");
+                    return;
+                }
 
-            currentUser = await AuthService.GetCurrentUserAsync();
-            if (currentUser == null)
+                currentUser = await AuthService.GetCurrentUserAsync();
+                if (currentUser == null)
+                {
+                    Navigation.NavigateTo("/login");
+                    return;
+                }
+            }
+            catch (Exception)
             {
                 Navigation.NavigateTo("/login");
-                return;
             }
-        }
-        catch (Exception)
-        {
-            Navigation.NavigateTo("/login");
-        }
-        finally
-        {
-            StateHasChanged();
+            finally
+            {
+                StateHasChanged();
+            }
         }
     }
 

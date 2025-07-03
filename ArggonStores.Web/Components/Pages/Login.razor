@@ -68,13 +68,24 @@
     private bool isLoading = false;
     private string errorMessage = string.Empty;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // Redirect to dashboard if already authenticated
-        var isAuthenticated = await AuthService.IsAuthenticatedAsync();
-        if (isAuthenticated)
+        if (firstRender)
         {
-            Navigation.NavigateTo("/dashboard");
+            // Only check authentication after the first render when JS interop is available
+            try
+            {
+                var isAuthenticated = await AuthService.IsAuthenticatedAsync();
+                if (isAuthenticated)
+                {
+                    Navigation.NavigateTo("/dashboard");
+                }
+            }
+            catch
+            {
+                // Ignore errors during initial check
+            }
+            StateHasChanged();
         }
     }
 
