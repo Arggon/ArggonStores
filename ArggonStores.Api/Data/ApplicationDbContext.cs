@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using ArggonStores.Api.Models;
+using ArggonStores.Api.Data.Configurations;
 
 namespace ArggonStores.Api.Data;
 
@@ -15,11 +16,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
         base.OnModelCreating(builder);
         
-        // Configure entity properties
-        builder.Entity<ApplicationUser>(entity =>
-        {
-            entity.Property(e => e.FirstName).HasMaxLength(100);
-            entity.Property(e => e.LastName).HasMaxLength(100);
-        });
+        // Apply all entity configurations
+        builder.ApplyConfiguration(new ApplicationUserConfiguration());
     }
 }
