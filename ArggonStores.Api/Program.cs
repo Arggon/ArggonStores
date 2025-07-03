@@ -86,6 +86,9 @@ builder.Services.AddAuthorization();
 // Custom services
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
+// Add MediatR
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Program).Assembly));
+
 // CORS configuration
 builder.Services.AddCors(options =>
 {
