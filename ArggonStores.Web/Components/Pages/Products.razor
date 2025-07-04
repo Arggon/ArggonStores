@@ -1,0 +1,281 @@
+@page "/products"
+@using ArggonStores.Web.Models
+@using ArggonStores.Web.Services
+@inject IProductService ProductService
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Products - ArggonStores Admin</PageTitle>
+
+<link href="~/css/products.css" rel="stylesheet" />
+
+<div class="products-container">
+    <header class="products-header">
+        <div class="header-content">
+            <h1 class="page-title">Product Management</h1>
+            <button class="btn btn-primary" @onclick="NavigateToAddProduct">
+                <span class="btn-icon">➕</span>
+                Add Product
+            </button>
+        </div>
+    </header>
+
+    @if (isLoading)
+    {
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <p>Loading products...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="error-message">
+            <span class="error-icon">⚠️</span>
+            @errorMessage
+        </div>
+    }
+    else
+    {
+        <div class="products-content">
+            <div class="filters-section">
+                <div class="filter-group">
+                    <label for="categoryFilter">Category:</label>
+                    <select id="categoryFilter" @bind="selectedCategory" @bind:after="OnFilterChanged">
+                        <option value="">All Categories</option>
+                        <option value="T-shirt">T-shirt</option>
+                        <option value="Jeans">Jeans</option>
+                        <option value="Dress">Dress</option>
+                        <option value="Jacket">Jacket</option>
+                        <option value="Shoes">Shoes</option>
+                        <option value="Accessories">Accessories</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="statusFilter">Status:</label>
+                    <select id="statusFilter" @bind="isActiveFilter" @bind:after="OnFilterChanged">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                        <option value="">All</option>
+                    </select>
+                </div>
+            </div>
+
+            @if (products.Count == 0)
+            {
+                <div class="empty-state">
+                    <div class="empty-icon">📦</div>
+                    <h3>No products found</h3>
+                    <p>Get started by adding your first product.</p>
+                    <button class="btn btn-primary" @onclick="NavigateToAddProduct">
+                        Add Product
+                    </button>
+                </div>
+            }
+            else
+            {
+                <div class="products-grid">
+                    @foreach (var product in products)
+                    {
+                        <div class="product-card @(product.IsActive ? "" : "inactive")">
+                            <div class="product-image">
+                                @if (!string.IsNullOrEmpty(product.ImageUrl))
+                                {
+                                    <img src="@product.ImageUrl" alt="@product.Name" />
+                                }
+                                else
+                                {
+                                    <div class="placeholder-image">
+                                        <span>📷</span>
+                                    </div>
+                                }
+                            </div>
+                            <div class="product-content">
+                                <div class="product-header">
+                                    <h3 class="product-name">@product.Name</h3>
+                                    <span class="product-status @(product.IsActive ? "active" : "inactive")">
+                                        @(product.IsActive ? "Active" : "Inactive")
+                                    </span>
+                                </div>
+                                <p class="product-category">@product.Category</p>
+                                <div class="product-details">
+                                    <span class="product-size">Size: @product.Size</span>
+                                    <span class="product-color">Color: @product.Color</span>
+                                </div>
+                                <div class="product-info">
+                                    <span class="product-price">$@product.Price.ToString("F2")</span>
+                                    <span class="product-stock">Stock: @product.StockQuantity</span>
+                                </div>
+                                @if (!string.IsNullOrEmpty(product.Brand))
+                                {
+                                    <p class="product-brand">@product.Brand</p>
+                                }
+                            </div>
+                            <div class="product-actions">
+                                <button class="btn btn-outline" @onclick="() => NavigateToEditProduct(product.Id)">
+                                    <span class="btn-icon">✏️</span>
+                                    Edit
+                                </button>
+                                <button class="btn btn-danger" @onclick="() => DeleteProduct(product.Id)" disabled="@(isDeleting == product.Id)">
+                                    <span class="btn-icon">🗑️</span>
+                                    @(isDeleting == product.Id ? "Deleting..." : "Delete")
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                @if (totalPages > 1)
+                {
+                    <div class="pagination">
+                        <button class="btn btn-outline" @onclick="PreviousPage" disabled="@(currentPage <= 1)">
+                            ← Previous
+                        </button>
+                        <span class="page-info">
+                            Page @currentPage of @totalPages (@totalCount total products)
+                        </span>
+                        <button class="btn btn-outline" @onclick="NextPage" disabled="@(currentPage >= totalPages)">
+                            Next →
+                        </button>
+                    </div>
+                }
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<Product> products = new();
+    private bool isLoading = true;
+    private string errorMessage = string.Empty;
+    private string selectedCategory = string.Empty;
+    private string isActiveFilter = "true";
+    private int currentPage = 1;
+    private int totalPages = 1;
+    private int totalCount = 0;
+    private const int pageSize = 12;
+    private int? isDeleting = null;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var isAuthenticated = await AuthService.IsAuthenticatedAsync();
+            if (!isAuthenticated)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            await LoadProducts();
+        }
+    }
+
+    private async Task LoadProducts()
+    {
+        isLoading = true;
+        errorMessage = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            bool? isActiveValue = isActiveFilter switch
+            {
+                "true" => true,
+                "false" => false,
+                _ => null
+            };
+
+            var result = await ProductService.GetProductsAsync(
+                category: string.IsNullOrEmpty(selectedCategory) ? null : selectedCategory,
+                isActive: isActiveValue,
+                pageNumber: currentPage,
+                pageSize: pageSize
+            );
+
+            if (result.IsSuccess)
+            {
+                products = result.Products;
+                totalPages = result.TotalPages;
+                totalCount = result.TotalCount;
+            }
+            else
+            {
+                errorMessage = result.Message;
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "Failed to load products";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnFilterChanged()
+    {
+        currentPage = 1;
+        await LoadProducts();
+    }
+
+    private async Task PreviousPage()
+    {
+        if (currentPage > 1)
+        {
+            currentPage--;
+            await LoadProducts();
+        }
+    }
+
+    private async Task NextPage()
+    {
+        if (currentPage < totalPages)
+        {
+            currentPage++;
+            await LoadProducts();
+        }
+    }
+
+    private void NavigateToAddProduct()
+    {
+        Navigation.NavigateTo("/products/add");
+    }
+
+    private void NavigateToEditProduct(int productId)
+    {
+        Navigation.NavigateTo($"/products/edit/{productId}");
+    }
+
+    private async Task DeleteProduct(int productId)
+    {
+        if (isDeleting.HasValue) return;
+
+        isDeleting = productId;
+        StateHasChanged();
+
+        try
+        {
+            var result = await ProductService.DeleteProductAsync(productId);
+            if (result.IsSuccess)
+            {
+                await LoadProducts();
+            }
+            else
+            {
+                errorMessage = result.Message;
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "Failed to delete product";
+        }
+        finally
+        {
+            isDeleting = null;
+            StateHasChanged();
+        }
+    }
+}

@@ -1,0 +1,409 @@
+@page "/products/add"
+@page "/products/edit/{id:int}"
+@using ArggonStores.Web.Models
+@using ArggonStores.Web.Services
+@inject IProductService ProductService
+@inject IAuthService AuthService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>@(IsEditMode ? "Edit Product" : "Add Product") - ArggonStores Admin</PageTitle>
+
+<link href="~/css/products.css" rel="stylesheet" />
+
+<div class="product-form-container">
+    <header class="form-header">
+        <div class="header-content">
+            <button class="btn btn-outline" @onclick="NavigateBack">
+                <span class="btn-icon">←</span>
+                Back to Products
+            </button>
+            <h1 class="page-title">@(IsEditMode ? "Edit Product" : "Add New Product")</h1>
+        </div>
+    </header>
+
+    @if (isLoading)
+    {
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <p>@(IsEditMode ? "Loading product..." : "Loading...")</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="error-message">
+            <span class="error-icon">⚠️</span>
+            @errorMessage
+        </div>
+    }
+    else
+    {
+        <div class="form-content">
+            @if (IsEditMode)
+            {
+                <EditForm Model="@editModel" OnValidSubmit="@HandleSubmit">
+                    <DataAnnotationsValidator />
+                    @RenderFormContent(editModel)
+                </EditForm>
+            }
+            else
+            {
+                <EditForm Model="@createModel" OnValidSubmit="@HandleSubmit">
+                    <DataAnnotationsValidator />
+                    @RenderFormContent(createModel)
+                </EditForm>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int? Id { get; set; }
+
+    private bool IsEditMode => Id.HasValue;
+
+    private CreateProductModel createModel = new();
+    private EditProductModel editModel = new();
+    
+    private bool isLoading = false;
+    private bool isSubmitting = false;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var isAuthenticated = await AuthService.IsAuthenticatedAsync();
+            if (!isAuthenticated)
+            {
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            if (IsEditMode)
+            {
+                await LoadProduct();
+            }
+            
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadProduct()
+    {
+        if (!Id.HasValue) return;
+
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await ProductService.GetProductByIdAsync(Id.Value);
+            if (result.IsSuccess && result.Product != null)
+            {
+                var product = result.Product;
+                editModel = new EditProductModel
+                {
+                    Id = product.Id,
+                    Name = product.Name,
+                    Description = product.Description,
+                    Category = product.Category,
+                    Size = product.Size,
+                    Color = product.Color,
+                    Price = product.Price,
+                    StockQuantity = product.StockQuantity,
+                    Brand = product.Brand,
+                    Material = product.Material,
+                    ImageUrl = product.ImageUrl,
+                    IsActive = product.IsActive
+                };
+            }
+            else
+            {
+                errorMessage = result.Message;
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "Failed to load product";
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleSubmit()
+    {
+        isSubmitting = true;
+        errorMessage = string.Empty;
+        StateHasChanged();
+
+        try
+        {
+            ProductResult result;
+
+            if (IsEditMode)
+            {
+                result = await ProductService.UpdateProductAsync(editModel);
+            }
+            else
+            {
+                result = await ProductService.CreateProductAsync(createModel);
+            }
+
+            if (result.IsSuccess)
+            {
+                Navigation.NavigateTo("/products");
+            }
+            else
+            {
+                errorMessage = result.Message;
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = $"Failed to {(IsEditMode ? "update" : "create")} product";
+        }
+        finally
+        {
+            isSubmitting = false;
+            StateHasChanged();
+        }
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/products");
+    }
+
+    private RenderFragment RenderFormContent(object model) => __builder =>
+    {
+        var isEdit = model is EditProductModel;
+        var createM = model as CreateProductModel;
+        var editM = model as EditProductModel;
+
+        <div class="form-grid">
+            <div class="form-section">
+                <h3>Basic Information</h3>
+                
+                <div class="form-group">
+                    <label for="name">Product Name *</label>
+                    @if (isEdit)
+                    {
+                        <InputText id="name" @bind-Value="editM!.Name" class="form-control" placeholder="Enter product name" />
+                        <ValidationMessage For="@(() => editM!.Name)" />
+                    }
+                    else
+                    {
+                        <InputText id="name" @bind-Value="createM!.Name" class="form-control" placeholder="Enter product name" />
+                        <ValidationMessage For="@(() => createM!.Name)" />
+                    }
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    @if (isEdit)
+                    {
+                        <InputTextArea id="description" @bind-Value="editM!.Description" class="form-control" rows="4" placeholder="Enter product description" />
+                        <ValidationMessage For="@(() => editM!.Description)" />
+                    }
+                    else
+                    {
+                        <InputTextArea id="description" @bind-Value="createM!.Description" class="form-control" rows="4" placeholder="Enter product description" />
+                        <ValidationMessage For="@(() => createM!.Description)" />
+                    }
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="category">Category *</label>
+                        @if (isEdit)
+                        {
+                            <InputSelect id="category" @bind-Value="editM!.Category" class="form-control">
+                                <option value="">Select Category</option>
+                                <option value="T-shirt">T-shirt</option>
+                                <option value="Jeans">Jeans</option>
+                                <option value="Dress">Dress</option>
+                                <option value="Jacket">Jacket</option>
+                                <option value="Shoes">Shoes</option>
+                                <option value="Accessories">Accessories</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => editM!.Category)" />
+                        }
+                        else
+                        {
+                            <InputSelect id="category" @bind-Value="createM!.Category" class="form-control">
+                                <option value="">Select Category</option>
+                                <option value="T-shirt">T-shirt</option>
+                                <option value="Jeans">Jeans</option>
+                                <option value="Dress">Dress</option>
+                                <option value="Jacket">Jacket</option>
+                                <option value="Shoes">Shoes</option>
+                                <option value="Accessories">Accessories</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => createM!.Category)" />
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label for="brand">Brand</label>
+                        @if (isEdit)
+                        {
+                            <InputText id="brand" @bind-Value="editM!.Brand" class="form-control" placeholder="Enter brand name" />
+                            <ValidationMessage For="@(() => editM!.Brand)" />
+                        }
+                        else
+                        {
+                            <InputText id="brand" @bind-Value="createM!.Brand" class="form-control" placeholder="Enter brand name" />
+                            <ValidationMessage For="@(() => createM!.Brand)" />
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Product Details</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="size">Size *</label>
+                        @if (isEdit)
+                        {
+                            <InputSelect id="size" @bind-Value="editM!.Size" class="form-control">
+                                <option value="">Select Size</option>
+                                <option value="XS">XS</option>
+                                <option value="S">S</option>
+                                <option value="M">M</option>
+                                <option value="L">L</option>
+                                <option value="XL">XL</option>
+                                <option value="XXL">XXL</option>
+                                <option value="One Size">One Size</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => editM!.Size)" />
+                        }
+                        else
+                        {
+                            <InputSelect id="size" @bind-Value="createM!.Size" class="form-control">
+                                <option value="">Select Size</option>
+                                <option value="XS">XS</option>
+                                <option value="S">S</option>
+                                <option value="M">M</option>
+                                <option value="L">L</option>
+                                <option value="XL">XL</option>
+                                <option value="XXL">XXL</option>
+                                <option value="One Size">One Size</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => createM!.Size)" />
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label for="color">Color *</label>
+                        @if (isEdit)
+                        {
+                            <InputText id="color" @bind-Value="editM!.Color" class="form-control" placeholder="Enter color" />
+                            <ValidationMessage For="@(() => editM!.Color)" />
+                        }
+                        else
+                        {
+                            <InputText id="color" @bind-Value="createM!.Color" class="form-control" placeholder="Enter color" />
+                            <ValidationMessage For="@(() => createM!.Color)" />
+                        }
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="material">Material</label>
+                    @if (isEdit)
+                    {
+                        <InputText id="material" @bind-Value="editM!.Material" class="form-control" placeholder="e.g., Cotton, Polyester, Denim" />
+                        <ValidationMessage For="@(() => editM!.Material)" />
+                    }
+                    else
+                    {
+                        <InputText id="material" @bind-Value="createM!.Material" class="form-control" placeholder="e.g., Cotton, Polyester, Denim" />
+                        <ValidationMessage For="@(() => createM!.Material)" />
+                    }
+                </div>
+
+                <div class="form-group">
+                    <label for="imageUrl">Image URL</label>
+                    @if (isEdit)
+                    {
+                        <InputText id="imageUrl" @bind-Value="editM!.ImageUrl" class="form-control" placeholder="Enter image URL" />
+                        <ValidationMessage For="@(() => editM!.ImageUrl)" />
+                    }
+                    else
+                    {
+                        <InputText id="imageUrl" @bind-Value="createM!.ImageUrl" class="form-control" placeholder="Enter image URL" />
+                        <ValidationMessage For="@(() => createM!.ImageUrl)" />
+                    }
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3>Pricing & Inventory</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="price">Price ($) *</label>
+                        @if (isEdit)
+                        {
+                            <InputNumber id="price" @bind-Value="editM!.Price" class="form-control" step="0.01" />
+                            <ValidationMessage For="@(() => editM!.Price)" />
+                        }
+                        else
+                        {
+                            <InputNumber id="price" @bind-Value="createM!.Price" class="form-control" step="0.01" />
+                            <ValidationMessage For="@(() => createM!.Price)" />
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label for="stockQuantity">Stock Quantity *</label>
+                        @if (isEdit)
+                        {
+                            <InputNumber id="stockQuantity" @bind-Value="editM!.StockQuantity" class="form-control" />
+                            <ValidationMessage For="@(() => editM!.StockQuantity)" />
+                        }
+                        else
+                        {
+                            <InputNumber id="stockQuantity" @bind-Value="createM!.StockQuantity" class="form-control" />
+                            <ValidationMessage For="@(() => createM!.StockQuantity)" />
+                        }
+                    </div>
+                </div>
+
+                @if (isEdit)
+                {
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <InputCheckbox @bind-Value="editM!.IsActive" />
+                            <span>Product is active</span>
+                        </label>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-outline" @onclick="NavigateBack">
+                Cancel
+            </button>
+            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                @if (isSubmitting)
+                {
+                    <span class="btn-icon">⏳</span>
+                    @(IsEditMode ? "Updating..." : "Creating...")
+                }
+                else
+                {
+                    <span class="btn-icon">@(IsEditMode ? "💾" : "➕")</span>
+                    @(IsEditMode ? "Update Product" : "Create Product")
+                }
+            </button>
+        </div>
+    };
+}
